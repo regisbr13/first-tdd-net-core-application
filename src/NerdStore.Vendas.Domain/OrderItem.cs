@@ -22,7 +22,7 @@ namespace NerdStore.Vendas.Domain
             Quantity += quantity;
         }
 
-        internal decimal GetItemTotalValue()
+        public decimal GetItemTotalValue()
         {
             return Quantity * UnitValue;
         }

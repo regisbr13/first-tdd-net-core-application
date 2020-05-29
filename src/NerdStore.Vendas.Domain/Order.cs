@@ -23,25 +23,53 @@ namespace NerdStore.Vendas.Domain
 
         public void AddItem(OrderItem orderItem)
         {
-            if (orderItem.Quantity < MIN_PRODUCT_QUANTITY || orderItem.Quantity > MAX_PRODUCT_QUANTITY)
-            {
-                var exceptionMessage = orderItem.Quantity < MIN_PRODUCT_QUANTITY ? 
-                    $"Minimum of {MIN_PRODUCT_QUANTITY} units for product." : 
-                    $"Maximum of {MAX_PRODUCT_QUANTITY} units for product.";
-                throw new DomainException(exceptionMessage);
-            }
+            if (!ItemQuantityIsValid(orderItem)) return;
 
-            var inList = _orderItems.Any(i => i.ProductId == orderItem.ProductId);
-            if (inList)
+            if (ItemAlreadyInList(orderItem))
             {
                 var existentItem = _orderItems.FirstOrDefault(i => i.ProductId == orderItem.ProductId);
                 existentItem.AddQuantity(orderItem.Quantity);
+                if (!ItemQuantityIsValid(existentItem)) return;
+
                 orderItem = existentItem;
                 _orderItems.Remove(existentItem);
             }
 
             _orderItems.Add(orderItem);
             CalculateTotalValue();
+        }
+
+        public void UpdateItem(OrderItem orderItem)
+        {
+            if (!ItemAlreadyInList(orderItem)) throw new DomainException($"Item {orderItem.ProductName} doesn't belong to the orders list.");
+
+            if (!ItemQuantityIsValid(orderItem)) return;
+
+            var existentItem = _orderItems.FirstOrDefault(i => i.ProductId == orderItem.ProductId);
+            _orderItems.Remove(existentItem);
+            _orderItems.Add(orderItem);
+
+            CalculateTotalValue();
+        }
+            
+        private bool ItemAlreadyInList(OrderItem orderItem)
+        {
+            return _orderItems.Any(i => i.ProductId == orderItem.ProductId); ;
+        }
+
+        private bool ItemQuantityIsValid(OrderItem orderItem)
+        {
+            var quantity = orderItem.Quantity;
+
+            if (quantity < MIN_PRODUCT_QUANTITY || quantity > MAX_PRODUCT_QUANTITY)
+            {
+                var exceptionMessage = orderItem.Quantity < MIN_PRODUCT_QUANTITY ?
+                    $"Minimum of {MIN_PRODUCT_QUANTITY} units per product." :
+                    $"Maximum of {MAX_PRODUCT_QUANTITY} units per product.";
+                throw new DomainException(exceptionMessage);
+            }
+
+            return true;
         }
 
         public void MakeDraft()
