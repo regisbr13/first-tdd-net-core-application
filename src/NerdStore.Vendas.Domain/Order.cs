@@ -41,7 +41,7 @@ namespace NerdStore.Vendas.Domain
 
         public void UpdateItem(OrderItem orderItem)
         {
-            if (!ItemAlreadyInList(orderItem)) throw new DomainException($"Item {orderItem.ProductName} doesn't belong to the orders list.");
+            CheckItemNonExistingInList(orderItem);
 
             if (!ItemQuantityIsValid(orderItem)) return;
 
@@ -50,6 +50,19 @@ namespace NerdStore.Vendas.Domain
             _orderItems.Add(orderItem);
 
             CalculateTotalValue();
+        }
+
+        public void RemoveItem(OrderItem orderItem)
+        {
+            CheckItemNonExistingInList(orderItem);
+
+            _orderItems.Remove(orderItem);
+            CalculateTotalValue();
+        }
+
+        private void CheckItemNonExistingInList(OrderItem orderItem)
+        {
+            if (!ItemAlreadyInList(orderItem)) throw new DomainException($"Item {orderItem.ProductName} doesn't belong to the order list.");
         }
             
         private bool ItemAlreadyInList(OrderItem orderItem)

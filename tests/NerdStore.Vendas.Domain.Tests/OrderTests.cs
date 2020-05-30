@@ -119,7 +119,7 @@ namespace NerdStore.Vendas.Domain.Tests
             Action result = () => order.UpdateItem(orderItem);
 
             // Assert
-            result.Should().Throw<DomainException>().WithMessage($"Item {orderItem.ProductName} doesn't belong to the orders list.");
+            result.Should().Throw<DomainException>().WithMessage($"Item {orderItem.ProductName} doesn't belong to the order list.");
         }
 
         [Fact]
@@ -158,6 +158,39 @@ namespace NerdStore.Vendas.Domain.Tests
             // Assert
             result1.Should().Throw<DomainException>().WithMessage($"Maximum of {Order.MAX_PRODUCT_QUANTITY} units per product.");
             result2.Should().Throw<DomainException>().WithMessage($"Minimum of {Order.MIN_PRODUCT_QUANTITY} units per product.");
+        }
+
+        // Remove Item:
+        [Fact]
+        public void RemoveItem_NonExistentItem_ShouldReturnADomainException()
+        {
+            // Arrange
+            var order = Order.OrderFactory.GenerateOrder(Guid.NewGuid());
+            var orderItem = new OrderItem(Guid.NewGuid(), "Test product", 2, 100);
+
+            // Act
+            Action result = () => order.RemoveItem(orderItem);
+
+            // Assert
+            result.Should().Throw<DomainException>().WithMessage($"Item {orderItem.ProductName} doesn't belong to the order list.");
+        }
+
+        [Fact]
+        public void RemoveItem_ExistentItem_ShouldUpdateTotalValue()
+        {
+            // Arrange
+            var order = Order.OrderFactory.GenerateOrder(Guid.NewGuid());
+            var orderItem1 = new OrderItem(Guid.NewGuid(), "Test product 1", 2, 100);
+            var orderItem2 = new OrderItem(Guid.NewGuid(), "Test product 2", 1, 100);
+            order.AddItem(orderItem1);
+            order.AddItem(orderItem2);
+            var totalAfterRemoveItem = orderItem1.GetItemTotalValue();
+
+            // Act
+                order.RemoveItem(orderItem2);
+
+            // Assert
+            order.TotalValue.Should().Be(totalAfterRemoveItem);
         }
     }
 }
