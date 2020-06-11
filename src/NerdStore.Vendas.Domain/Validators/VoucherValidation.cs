@@ -30,7 +30,7 @@ namespace NerdStore.Vendas.Domain.Validators
 
             When(v => v.VoucherType == VoucherType.Percentage, () =>
             {
-                RuleFor(v => v.DiscountPercentage).NotNull().WithMessage(DiscountValueErrorMessage)
+                RuleFor(v => v.DiscountPercentage).NotNull().WithMessage(DiscountPercentageErrorMessage)
                 .GreaterThan(0).WithMessage(DiscountPercentageErrorMessage);
             });
         }

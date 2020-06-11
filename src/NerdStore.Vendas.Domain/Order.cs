@@ -1,4 +1,5 @@
-﻿using NerdStore.Core.Exceptions.DomainObjects;
+﻿using FluentValidation.Results;
+using NerdStore.Core.Exceptions.DomainObjects;
 using NerdStore.Vendas.Domain.Enums;
 using System;
 using System.Collections.Generic;
@@ -13,8 +14,11 @@ namespace NerdStore.Vendas.Domain
         public const int MAX_PRODUCT_QUANTITY = 15;
         public decimal TotalValue { get; private set; }
         public IReadOnlyCollection<OrderItem> OrderItems => _orderItems;
-        public OrderStatus OrderStatus { get; set; }
-        public Guid CustomerId { get; set; }
+        public OrderStatus OrderStatus { get; private set; }
+        public Guid CustomerId { get; private set; }
+        public Voucher Voucher { get; private set; }
+        public bool UsedVoucher { get; private set; }
+        public decimal Discount { get; private set; }
 
         protected Order()
         {
@@ -60,6 +64,22 @@ namespace NerdStore.Vendas.Domain
             CalculateTotalValue();
         }
 
+        public ValidationResult ApplyVoucher(Voucher voucher)
+        {
+            var result = voucher.Validate();
+            if (!result.IsValid) return result;
+
+            Voucher = voucher;
+            UsedVoucher = true;;
+            CalculateDiscountTotalValue();
+            return result;
+        }
+
+        public void MakeDraft()
+        {
+            OrderStatus = OrderStatus.Draft;
+        }
+
         private void CheckItemNonExistingInList(OrderItem orderItem)
         {
             if (!ItemAlreadyInList(orderItem)) throw new DomainException($"Item {orderItem.ProductName} doesn't belong to the order list.");
@@ -85,14 +105,25 @@ namespace NerdStore.Vendas.Domain
             return true;
         }
 
-        public void MakeDraft()
-        {
-            OrderStatus = OrderStatus.Draft;
-        }
-
         private void CalculateTotalValue()
         {
             TotalValue = _orderItems.Sum(i => i.GetItemTotalValue());
+        }
+
+        private void CalculateDiscountTotalValue()
+        {
+            if (!UsedVoucher) return;
+
+            if (Voucher.VoucherType == VoucherType.Value)
+            {
+                Discount = Voucher.DiscountValue.Value;
+            }
+            else
+            {
+                Discount = TotalValue * Voucher.DiscountPercentage.Value / 100;
+            }
+
+            TotalValue -= Discount;
         }
 
         public static class OrderFactory

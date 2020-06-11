@@ -1,5 +1,6 @@
 using FluentAssertions;
 using NerdStore.Core.Exceptions.DomainObjects;
+using NerdStore.Vendas.Domain.Enums;
 using System;
 using System.Linq;
 using Xunit;
@@ -191,6 +192,72 @@ namespace NerdStore.Vendas.Domain.Tests
 
             // Assert
             order.TotalValue.Should().Be(totalAfterRemoveItem);
+        }
+
+        [Fact]
+        public void ApplyVoucher_AnyValidVoucher_ShouldReturnWithoutErrors()
+        {
+            // Arrange
+            var order = Order.OrderFactory.GenerateOrder(Guid.NewGuid());
+            var voucher = new Voucher("PROMO 10", null, 10, 1, true, false, DateTime.Now, VoucherType.Percentage);
+
+            // Act
+            var result = order.ApplyVoucher(voucher);
+
+            // Assert
+            result.IsValid.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ApplyVoucher_AnyInvalidVoucher_ShouldReturnWithErrors()
+        {
+            // Arrange
+            var order = Order.OrderFactory.GenerateOrder(Guid.NewGuid());
+            var voucher = new Voucher("", null, null, 0, false, true, DateTime.Now.AddDays(-1), VoucherType.Percentage);
+
+            // Act
+            var result = order.ApplyVoucher(voucher);
+
+            // Assert
+            result.IsValid.Should().BeFalse();
+        }
+
+        [Fact]
+        public void ApplyVoucher_ValueVoucher_ShouldApplyDiscountOnTotalValue()
+        {
+            // Arrange
+            var order = Order.OrderFactory.GenerateOrder(Guid.NewGuid());
+            var voucher = new Voucher("PROMO 20", 20, null, 1, true, false, DateTime.Now, VoucherType.Value);
+            var orderItem1 = new OrderItem(Guid.NewGuid(), "Test product 1", 2, 50);
+            var orderItem2 = new OrderItem(Guid.NewGuid(), "Test product 2", 1, 100);
+            order.AddItem(orderItem1);
+            order.AddItem(orderItem2);
+            var valueWithDiscount = order.TotalValue - voucher.DiscountValue;
+
+            // Act
+            order.ApplyVoucher(voucher);
+
+            // Assert
+            order.TotalValue.Should().Be(valueWithDiscount);
+        }
+
+        [Fact]
+        public void ApplyVoucher_PercentageVoucher_ShouldApplyDiscountOnTotalValue()
+        {
+            // Arrange
+            var order = Order.OrderFactory.GenerateOrder(Guid.NewGuid());
+            var voucher = new Voucher("PROMO 20", null, 20, 1, true, false, DateTime.Now, VoucherType.Percentage);
+            var orderItem1 = new OrderItem(Guid.NewGuid(), "Test product 1", 2, 50);
+            var orderItem2 = new OrderItem(Guid.NewGuid(), "Test product 2", 1, 100);
+            order.AddItem(orderItem1);
+            order.AddItem(orderItem2);
+            var valueWithDiscount = order.TotalValue * (1 - voucher.DiscountPercentage /  100);
+
+            // Act
+            order.ApplyVoucher(voucher);
+
+            // Assert
+            order.TotalValue.Should().Be(valueWithDiscount);
         }
     }
 }
