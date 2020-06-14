@@ -259,5 +259,40 @@ namespace NerdStore.Vendas.Domain.Tests
             // Assert
             order.TotalValue.Should().Be(valueWithDiscount);
         }
+
+        [Fact]
+        public void ApplyVoucher_DiscountExceedsTotalValue_TotalValueShouldBeZero()
+        {
+            // Arrange
+            var order = Order.OrderFactory.GenerateOrder(Guid.NewGuid());
+            var voucher = new Voucher("PROMO 20", 150, null, 1, true, false, DateTime.Now, VoucherType.Value);
+            var orderItem1 = new OrderItem(Guid.NewGuid(), "Test product 1", 2, 50);
+            order.AddItem(orderItem1);;
+
+            // Act
+            order.ApplyVoucher(voucher);
+
+            // Assert
+            order.TotalValue.Should().Be(0);
+        }
+
+        [Fact]
+        public void ApplyVoucher_ModifyOrder_ShouldCalculateDiscountTotalValue()
+        {
+            // Arrange
+            var order = Order.OrderFactory.GenerateOrder(Guid.NewGuid());
+            var voucher = new Voucher("PROMO 20", 100, null, 1, true, false, DateTime.Now, VoucherType.Value);
+            var orderItem1 = new OrderItem(Guid.NewGuid(), "Test product 1", 2, 50);
+            var orderItem2 = new OrderItem(Guid.NewGuid(), "Test product 2", 1, 100);
+            order.AddItem(orderItem1);
+            order.ApplyVoucher(voucher);
+
+            // Act
+            order.AddItem(orderItem2);
+            var valueWithDiscount = order.OrderItems.Sum(i => i.GetItemTotalValue()) - voucher.DiscountValue;
+
+            // Assert
+            order.TotalValue.Should().Be(valueWithDiscount);
+        }
     }
 }

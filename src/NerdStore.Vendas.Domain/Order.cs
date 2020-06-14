@@ -108,6 +108,7 @@ namespace NerdStore.Vendas.Domain
         private void CalculateTotalValue()
         {
             TotalValue = _orderItems.Sum(i => i.GetItemTotalValue());
+            CalculateDiscountTotalValue();
         }
 
         private void CalculateDiscountTotalValue()
@@ -123,7 +124,7 @@ namespace NerdStore.Vendas.Domain
                 Discount = TotalValue * Voucher.DiscountPercentage.Value / 100;
             }
 
-            TotalValue -= Discount;
+            TotalValue -= TotalValue >= Discount ? Discount : TotalValue;
         }
 
         public static class OrderFactory
