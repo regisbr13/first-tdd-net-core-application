@@ -15,7 +15,7 @@ namespace NerdStore.Vendas.Application.Commands.Validators
 
         public AddOrderItemValidation()
         {
-            RuleFor(x => x.ClientId)
+            RuleFor(x => x.CustomerId)
                 .NotEqual(Guid.Empty)
                 .WithMessage(ClientIdErrorMessage);
 

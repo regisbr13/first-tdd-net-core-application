@@ -1,4 +1,5 @@
 ﻿using FluentValidation.Results;
+using NerdStore.Core.DomainObjects;
 using NerdStore.Core.Exceptions.DomainObjects;
 using NerdStore.Vendas.Domain.Enums;
 using System;
@@ -7,7 +8,7 @@ using System.Linq;
 
 namespace NerdStore.Vendas.Domain
 {
-    public class Order
+    public class Order : Entity, IAgregateRoot
     {
         private readonly List<OrderItem> _orderItems;
         public const int MIN_PRODUCT_QUANTITY = 1;

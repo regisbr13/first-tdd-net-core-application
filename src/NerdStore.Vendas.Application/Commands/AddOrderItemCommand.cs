@@ -6,7 +6,7 @@ namespace NerdStore.Vendas.Application.Commands
 {
     public class AddOrderItemCommand : Command
     {
-        public Guid ClientId { get; set; }
+        public Guid CustomerId { get; set; }
         public Guid ProductId { get; set; }
         public string ProductName { get; set; }
         public int Quantity { get; set; }
@@ -14,7 +14,7 @@ namespace NerdStore.Vendas.Application.Commands
 
         public AddOrderItemCommand(Guid clientId, Guid productId, string productName, int quantity, decimal unitValue)
         {
-            ClientId = clientId;
+            CustomerId = clientId;
             ProductId = productId;
             ProductName = productName;
             Quantity = quantity;
